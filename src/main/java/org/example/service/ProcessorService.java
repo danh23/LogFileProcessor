@@ -6,6 +6,7 @@ import org.example.model.Task;
 import org.example.util.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.event.Level;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,12 +20,20 @@ public class ProcessorService {
 
     private static final Logger log = LoggerFactory.getLogger(ProcessorService.class);
 
+    private final LoggingService loggingService;
+
+    public ProcessorService(LoggingService loggingService) {
+        this.loggingService = loggingService;
+    }
+
+    //parse the file line by line
     public void parseFile(InputStream is) throws IOException {
         ConcurrentHashMap<String, Task> taskMap = new ConcurrentHashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
             while ((line = br.readLine()) != null) {
                 try {
+                    //parse a line and map to a Task object
                     Task task = TaskMapper.mapTask(line);
                     processLine(task, taskMap);
                 } catch (Exception e) {
@@ -34,10 +43,13 @@ public class ProcessorService {
         }
     }
 
+    //process each line based on action type
     public void processLine(Task task, ConcurrentMap<String, Task> taskMap) {
         if(task.getAction().equals(Action.START)) {
+            //if START, store in map
             taskMap.put(task.getPid(), task);
         } else if(task.getAction().equals(Action.END)) {
+            //if END, look for matching START by pid
             Task startTask = taskMap.remove(task.getPid());
             if(startTask != null) {
                 reportTask(startTask.getTimestamp(), task.getTimestamp(), task.getPid());
@@ -47,14 +59,17 @@ public class ProcessorService {
         }
     }
 
+    //report task execution time and log based on thresholds
     public void reportTask(LocalTime startTime, LocalTime endTime, String pid) {
+        //calculate execution time in seconds
         int executionTimeInSeconds = TimeUtils.getSecondsFromTime(endTime) -
                 TimeUtils.getSecondsFromTime(startTime);
         String message = String.format("Task with PID: %s executed in %d seconds", pid, executionTimeInSeconds);
+        //log based on execution time
         if (executionTimeInSeconds > 10) {
-            log.error(message);
+            loggingService.log(Level.ERROR, message);
         } else if(executionTimeInSeconds > 5) {
-            log.warn(message);
+            loggingService.log(Level.WARN, message);
         }
     }
 }
