@@ -8,6 +8,41 @@ LogFileProcessor is a Java-based application designed to process and analyze log
 - Action modeling for log processing.
 - Utility functions for time-based calculations.
 - Modular and extensible architecture.
+- Logging service for enhanced debugging and monitoring.
+
+## Project Structure
+```
+pom.xml
+README.md
+src/
+    main/
+        java/
+            org/
+                example/
+                    Main.java
+                    mapper/
+                        TaskMapper.java
+                    model/
+                        Action.java
+                        Task.java
+                    service/
+                        LoggingService.java
+                        ProcessorService.java
+                    util/
+                        TimeUtils.java
+        resources/
+            logs.log
+    test/
+        java/
+            org/
+                example/
+                    mapper/
+                        TaskMapperTest.java
+                    service/
+                        ProcessorServiceTest.java
+                    util/
+                        TimeUtilsTest.java
+```
 
 ## Getting Started
 

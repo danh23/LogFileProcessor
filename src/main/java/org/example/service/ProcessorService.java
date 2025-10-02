@@ -4,8 +4,6 @@ import org.example.mapper.TaskMapper;
 import org.example.model.Action;
 import org.example.model.Task;
 import org.example.util.TimeUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import java.io.BufferedReader;
@@ -18,8 +16,6 @@ import java.util.concurrent.ConcurrentMap;
 
 public class ProcessorService {
 
-    private static final Logger log = LoggerFactory.getLogger(ProcessorService.class);
-
     private final LoggingService loggingService;
 
     public ProcessorService(LoggingService loggingService) {
@@ -28,6 +24,7 @@ public class ProcessorService {
 
     //parse the file line by line
     public void parseFile(InputStream is) throws IOException {
+        loggingService.log(Level.INFO, "Starting to process the file");
         ConcurrentHashMap<String, Task> taskMap = new ConcurrentHashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
@@ -37,9 +34,10 @@ public class ProcessorService {
                     Task task = TaskMapper.mapTask(line);
                     processLine(task, taskMap);
                 } catch (Exception e) {
-                    log.error("Error processing line: {}", line, e);
+                    loggingService.log(Level.ERROR, String.format("Error processing line: %s", line), e);
                 }
             }
+            loggingService.log(Level.INFO, "Finished processing the file");
         }
     }
 
@@ -54,7 +52,7 @@ public class ProcessorService {
             if(startTask != null) {
                 reportTask(startTask.getTimestamp(), task.getTimestamp(), task.getPid());
             } else {
-                log.error("END action without matching START for PID: {}", task.getPid());
+                loggingService.log(Level.ERROR, String.format("END action without matching START for PID: %s", task.getPid()));
             }
         }
     }

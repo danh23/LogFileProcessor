@@ -11,4 +11,8 @@ public class LoggingService {
     public void log(Level level, String message) {
         log.atLevel(level).log(message);
     }
+
+    public void log(Level level, String message, Throwable throwable) {
+        log.atLevel(level).log(message, throwable);
+    }
 }

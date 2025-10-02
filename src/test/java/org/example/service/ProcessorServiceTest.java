@@ -1,11 +1,16 @@
 package org.example.service;
 
+import org.example.model.Action;
+import org.example.model.Task;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.event.Level;
 
 import java.time.LocalTime;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,11 +30,42 @@ class ProcessorServiceTest {
     }
 
     @Test
-    void parseFile() {
+    void processLine_shouldStoreTaskByPid() {
+        String pid = "1234";
+        ConcurrentMap<String, Task> resultMap = new ConcurrentHashMap<>();
+        Task task = new Task(LocalTime.of(10, 0, 0), "Process description", Action.START, pid);
+
+        processorService.processLine(task, resultMap);
+
+        assertEquals(1, resultMap.size());
+        assertEquals(task, resultMap.get(pid));
     }
 
     @Test
-    void processLine() {
+    void processLine_shouldRemoveMatchingPid() {
+        String pid = "1234";
+        Task matchingTask = new Task(LocalTime.of(10, 0, 0), "Process description", Action.END, pid);
+
+        ConcurrentMap<String, Task> resultMap = new ConcurrentHashMap<>();
+        resultMap.put(pid, matchingTask);
+        Task endTask = new Task(LocalTime.of(10, 0, 0), "Process description", Action.END, pid);
+
+        processorService.processLine(endTask, resultMap);
+
+        assertEquals(0, resultMap.size());
+    }
+
+    @Test
+    void processLine_shouldLogErrorForNotMatchingTask() {
+        String pid = "1234";
+
+        ConcurrentMap<String, Task> resultMap = new ConcurrentHashMap<>();
+        Task endTask = new Task(LocalTime.of(10, 0, 0), "Process description", Action.END, pid);
+
+        processorService.processLine(endTask, resultMap);
+
+        assertEquals(0, resultMap.size());
+        verify(loggingService).log(eq(Level.ERROR), anyString());
     }
 
     @Test
