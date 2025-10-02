@@ -22,9 +22,13 @@ public class ProcessorService {
         this.loggingService = loggingService;
     }
 
+    //TODO Add unit tests for this class
     //parse the file line by line
     public void parseFile(InputStream is) throws IOException {
         loggingService.log(Level.INFO, "Starting to process the file");
+
+        //TODO The concurrent map was used initially for using threads for parallel processing in case of large files.
+        // I left it as is for future scalability.
         ConcurrentHashMap<String, Task> taskMap = new ConcurrentHashMap<>();
         try (BufferedReader br = new BufferedReader(new InputStreamReader(is))) {
             String line;
